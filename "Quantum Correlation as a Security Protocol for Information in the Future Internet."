@@ -1,0 +1,64 @@
+from qiskit import Aer, QuantumCircuit, transpile, assemble, execute
+from qiskit.visualization import plot_histogram
+
+def generate_entangled_pair():
+    # Create a quantum circuit with two qubits
+    entanglement_circuit = QuantumCircuit(2, 2)
+
+    # Create an entangled pair of qubits using a Hadamard gate and a CNOT gate
+    entanglement_circuit.h(0)
+    entanglement_circuit.cx(0, 1)
+
+    return entanglement_circuit
+
+def alice_measure(entangled_pair):
+    # Create a quantum circuit for Alice's measurement
+    alice_measurement_circuit = QuantumCircuit(2, 2)
+
+    # Combine Alice's measurement with the entangled pair
+    alice_measurement_circuit += entangled_pair
+
+    # Alice performs measurements on her qubits
+    alice_measurement_circuit.measure([0, 1], [0, 1])
+
+    return alice_measurement_circuit
+
+def bob_measure(entangled_pair, basis):
+    # Create a quantum circuit for Bob's measurement
+    bob_measurement_circuit = QuantumCircuit(2, 2)
+
+    # Combine Bob's measurement with the entangled pair
+    bob_measurement_circuit += entangled_pair
+
+    # Apply the chosen basis for Bob's measurement
+    if basis == 'X':
+        bob_measurement_circuit.h(0)
+    bob_measurement_circuit.measure([0, 1], [0, 1])
+
+    return bob_measurement_circuit
+
+def run_simulation():
+    # Generate an entangled pair
+    entangled_pair = generate_entangled_pair()
+
+    # Alice performs measurements in random bases
+    alice_measurement_circuit = alice_measure(entangled_pair)
+
+    # Bob performs measurements in random bases
+    bob_measurement_circuit = bob_measure(entangled_pair, 'X')  # Assume Bob uses X basis
+
+    # Combine Alice's and Bob's circuits
+    full_circuit = entangled_pair + alice_measurement_circuit + bob_measurement_circuit
+
+    # Simulate the quantum circuit
+    simulator = Aer.get_backend('qasm_simulator')
+    compiled_circuit = transpile(full_circuit, simulator)
+    result = execute(compiled_circuit, simulator, shots=1024).result()
+
+    # Display the results
+    counts = result.get_counts(full_circuit)
+    print("Measurement results:", counts)
+    plot_histogram(counts)
+
+if __name__ == "__main__":
+    run_simulation()
