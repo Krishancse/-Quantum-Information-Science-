@@ -1,0 +1,47 @@
+from qiskit import QuantumCircuit, Aer, transpile, assemble, execute
+from qiskit.visualization import plot_histogram, circuit_drawer
+import matplotlib.pyplot as plt
+
+def quantum_teleportation_simulation():
+    # Create a quantum circuit with 3 qubits and 3 classical bits
+    quantum_circuit = QuantumCircuit(3, 3)
+
+    # Step 1: Alice prepares the state to be teleported
+    quantum_circuit.h(0)
+    quantum_circuit.cx(0, 1)
+    quantum_circuit.barrier()
+
+    # Step 2: Alice entangles her qubit (q1) with a third qubit (q2)
+    quantum_circuit.cx(1, 2)
+    quantum_circuit.h(1)
+    quantum_circuit.barrier()
+
+    # Step 3: Alice measures her qubits and sends the results to Bob
+    quantum_circuit.measure([0, 1], [1, 0])
+    quantum_circuit.barrier()
+
+    # Step 4: Bob performs operations based on the received classical bits
+    quantum_circuit.cx(1, 2)
+    quantum_circuit.cz(0, 2)
+
+    # Step 5: Bob measures the final qubit
+    quantum_circuit.measure(2, 2)
+
+    # Visualize the quantum circuit
+    circuit_drawer(quantum_circuit, output='mpl', style={'name': 'default'}, scale=0.5)
+    
+    # Display the image
+    plt.show()
+
+    # Simulate the quantum circuit
+    simulator = Aer.get_backend('qasm_simulator')
+    compiled_circuit = transpile(quantum_circuit, simulator)
+    result = execute(compiled_circuit, simulator, shots=1024).result()
+
+    # Display the results
+    counts = result.get_counts(quantum_circuit)
+    print("\nMeasurement results:", counts)
+    plot_histogram(counts)
+
+if __name__ == "__main__":
+    quantum_teleportation_simulation()
